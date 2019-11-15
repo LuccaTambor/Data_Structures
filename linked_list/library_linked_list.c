@@ -68,9 +68,9 @@ void PrintListNodes(book *start) {//printint nodes of the list
     puts("--------------------OUR BOOKS-----------------");
     book *aux = start;//aux node
     while(aux!=NULL) {
-        printf("\nID do book: %i|", aux->id);
-        printf("name do book: %s|", aux->name);
-        printf("author do book: %s\n", aux->author);
+        printf("\nID: %i|", aux->id);
+        printf("Name: %s|", aux->name);
+        printf("Author: %s\n", aux->author);
         puts("------------------------------------------");
         aux=aux->next;
     }

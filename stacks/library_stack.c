@@ -2,17 +2,15 @@
 #include "stdio.h"
 #include "string.h"
 
-//Estrutura Abstrata do livro
-typedef struct biblio
-{
-    char nome[100],autor[100];
+//Book ADT
+typedef struct lib {
+    char name[100],author[100];
     int id;
-    struct biblio *prox;
-}livro;
+    struct lib *next;
+}book;
 
-//Função que limpa a tela
-void clear()
-{
+//Clean terminal
+void clear() {
     #ifdef WIN32
         system("cls");
     #endif
@@ -21,67 +19,56 @@ void clear()
     #endif
 }
 
-//Função que pausa o programa até o usuário pressionar ENTER
-void pause()
-{
-    puts("PRESSIONE ENTER PARA CONTINUAR.......");
+//Pause script 
+void pause() {
+    puts("PRESS ENTER.......");
     getchar();
     getchar();
 }
 
-
-//A função push coloca um livro no topo da pilha
-void push(livro **topo)
-{
-    livro *novo = malloc(sizeof(livro));
-    printf("Insira o nome do Livro:");
+void push(book **top) {//Put a node on top of the stack
+    book *new = malloc(sizeof(book));
+    //Data Insertion
+    printf("Insert the book's name:");
     getchar();
-    scanf("%[^\n]",novo->nome);
-    printf("Insira o Id do Livro:");
-    scanf("%i", &novo->id);
+    scanf("%[^\n]",new->name);
+    printf("Insert the book's ID:");
+    scanf("%i", &new->id);
     getchar();
-    printf("Insira o autor do Livro:");
-    scanf("%[^\n]",novo->autor);
-    novo->prox=NULL;
-    if(*topo==NULL)
-        *topo = novo;
-    else
-    {
-        novo->prox = *topo;
-        *topo = novo; 
+    printf("Insert book's author:");
+    scanf("%[^\n]",new->author);
+    new->next=NULL;
+    if(*top==NULL)
+        *top = new;
+    else {
+        new->next = *top;
+        *top = new; 
     }
 }
 
-
-//A função pop exclui o livro no topo da pilha
-void pop(livro **topo)
-{
-    livro *aux = *topo;
-    if(*topo==NULL)
-        puts("Nenhum livro");
-    else
-    {
-        *topo = aux->prox;
+void pop(book **top) {//Excludes the top node of the stack
+    book *aux = *top;
+    if(*top==NULL)
+        puts("Empty Stack!");
+    else {
+        *top = aux->next;
         free(aux);
     }
-    puts("popped");
+    puts("Popped");
 }
 
-//Imprime todos os livros da pilha
-void printS(livro **topo)
-{
-    livro *aux = *topo;
-    if(*topo==NULL)
-        puts("Nenhum Livro!");
-    else
-    {
-        while(aux!=NULL)
-        {
-            printf("\nID do livro: %i|", aux->id);
-            printf("Nome do Livro: %s|", aux->nome);
-            printf("Autor do livro: %s\n", aux->autor);
+
+void PrintStack(book **top) {//Imprime todos os books da pilha
+    book *aux = *top;
+    if(*top==NULL)
+        puts("Empty Stack!");
+    else {
+        while(aux!=NULL) {
+            printf("\nID: %i|", aux->id);
+            printf("Name: %s|", aux->name);
+            printf("Author: %s\n", aux->author);
             puts("------------------------------------------");
-            aux=aux->prox;
+            aux=aux->next;
         }
     }
 }
@@ -89,32 +76,29 @@ void printS(livro **topo)
 int main()
 {
     int op=0,n=0,id;
-    //Declarando o topo da pilha
-    livro *topo=NULL;
-    do//Loop do menu de opções
-    {
-        
-        puts("\n---------------------BIBLIOTECA--------------------------------");
-        puts("1)Inserir Livro");
-        puts("2)Consultar Livros");
-        puts("3)Excluir Livro");
-        puts("4)SAIR");
+    //Pointer for the top of the stack
+    book *top=NULL;
+    do {//menu
+        puts("\n---------------------LIBRARY--------------------------------");
+        puts("1)Insert book");
+        puts("2)Consult books");
+        puts("3)Exclude book");
+        puts("4)EXIT");
         puts("---------------------------------------------------------------");
-        printf("ESCOLHA:");
+        printf("CHOOSE:");
         scanf("%i",&op);
-        switch (op)
-        {
+        switch (op) {
         case 1:
-            push(&topo);//Manda o endereço do topo da pilha
-            puts("Inserido com Sucesso");
+            push(&top);//Manda o endereço do top da pilha
+            puts("Pushed with Sucess!");
             pause();
             break;
         case 2:
-            printS(&topo);
+            PrintStack(&top);
             pause();
             break;
         case 3:
-            pop(&topo);
+            pop(&top);
             pause();
             break;
         case 4:
