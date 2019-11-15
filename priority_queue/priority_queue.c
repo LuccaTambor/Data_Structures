@@ -3,17 +3,15 @@
 #include "time.h"
 #include "string.h"
 
-//Estrutura da fila de prioridade, duplamente encadeada
-typedef struct node
-{
-    int id,prioridade,tempo,atendimento;
-    char nome[100];
+//ADT
+typedef struct node {
+    int id,priority,time,attended;//attended is times a node has been in the start of the queue
+    char name[100];
     struct node *prox,*ant;
-}fila;
+}queue;
 
-//Função de limpar tela
-void clear()
-{
+//Clean terminal
+void clear() {
     #ifdef WIN32
         system("cls");
     #endif
@@ -22,192 +20,166 @@ void clear()
     #endif
 }
 
-//Função que pausa o programa até o usuário pressionar ENTER
-void pause()
-{
-    puts("PRESSIONE ENTER PARA CONTINUAR.......");
+//Pause script 
+void pause() {
+    puts("PRESS ENTER.......");
     getchar();
     getchar();
 }
 
-void insereOrdenado(fila **fim, fila **inicio)//Coloca um cliente no final da fila, não levando em conta a prioridade
-{
-    fila *novo = malloc(sizeof(fila)); 
-    fila *aux = * inicio;
-    //Inserindo os dados no node
-    printf("Insira o nome do cliente:");
+void Insertion(queue **end, queue **start) {//Insert in a position on the queue depending on the priority
+    queue *new = malloc(sizeof(queue)); 
+    queue *aux = * start;
+    //Data Insertion
+    printf("Insert name:");
     getchar();
-    scanf("%[^\n]",novo->nome);
+    scanf("%[^\n]",new->name);
     getchar();
-    printf("Insira o Id:");
-    scanf("%i",&novo->id);
-    printf("Insira a prioridade do cliente:");
-    scanf("%i",&novo->prioridade);
-    int a = 5 + rand() % 55;
-    novo->tempo = a;
-    novo->atendimento = 1;
-    if(*inicio==NULL)//Caso a fila esteja vazia
-    {
-        *inicio = novo;
-        *fim = novo;
-        novo->prox =NULL;
-        novo->ant = NULL;
+    printf("Insert ID:");
+    scanf("%i",&new->id);
+    printf("Insert the priority:");
+    scanf("%i",&new->priority);
+    int a = 5 + rand() % 55;//Generating a random time
+    new->time = a;
+    new->attended = 1;
+    if(*start==NULL) {//Empry Queue
+        *start = new;
+        *end = new;
+        new->prox =NULL;
+        new->ant = NULL;
     }
-    else//Há clientes na fila já
-    {
-        while(aux != NULL && aux->prioridade > novo->prioridade) 
+    else {
+        while(aux != NULL && aux->priority > new->priority) 
             aux = aux->prox;
-        if(*inicio == aux)
-        { 
-            novo->prox = *inicio;
-            (*inicio)->ant = novo;
-            novo->ant = NULL;
-            *inicio = novo;
+        if(*start == aux) { 
+            new->prox = *start;
+            (*start)->ant = new;
+            new->ant = NULL;
+            *start = new;
         }
-        else if(aux == NULL) 
-        {
-            novo->ant = *fim;
-            (*fim)->prox = novo;
-            novo->prox = NULL;
-            *fim = novo;
+        else if(aux == NULL) {
+            new->ant = *end;
+            (*end)->prox = new;
+            new->prox = NULL;
+            *end = new;
         }
-        else
-        { 
-            novo->prox = aux;
-            aux->ant->prox = novo;
-            novo->ant = aux->ant;
-            aux->ant = novo;
+        else { 
+            new->prox = aux;
+            aux->ant->prox = new;
+            new->ant = aux->ant;
+            aux->ant = new;
         }
     }
 }
 
-void printFP(fila **inicio)//Imprime a Fila de prioridade na ordem em que está 
-{
-    fila *aux = *inicio;
+void PrintQueue(queue **start) {//Prints all nodes of the queue in order
+    queue *aux = *start;
     if(aux==NULL)
-        puts("A fila está vazia!");
-    else
-    {
-        while(aux!=NULL)
-        {
-            printf("\n|Nome: %s | Id:%i | Prioridade:%i | Tempo:%i|\n",aux->nome,aux->id,aux->prioridade,aux->tempo);
+        puts("Empry Queue!");
+    else {
+        while(aux!=NULL) {
+            printf("\n|name: %s | ID:%i | priority:%i | Time:%i|\n",aux->name,aux->id,aux->priority,aux->time);
             aux=aux->prox;
         }
     }
 }
 
-//Roda a fila, passando 5 de tempo, caso o cliente atendido não tenha seu tempo zerado ele volta pro final da fila
-void rodada(fila **inicio, fila **fim)
-{
-    fila *cliente = *inicio;
-    if(*inicio==NULL)
-        puts("A Fila está vazia!");
-    else
-    {
-        cliente->tempo = cliente->tempo - 5;
-        if(cliente->atendimento > 1)
-        {
-            if(cliente->atendimento == 1)
-                cliente->atendimento++;
-            else if(cliente->atendimento == 2)
-            {
-                cliente->prioridade--;
-                cliente->atendimento--;
+void Round(queue **start, queue **end) {
+    queue *first = *start;//First node of the queue
+    if(*start==NULL)//Queue is empty
+        puts("Empry Queue!");
+    else {
+        first->time = first->time - 5;//Reducing 5 on the time
+        if(first->attended > 1) {//Verifing if it was attended more than two times
+            if(first->attended == 1)//Attend only one time, just increment attended
+                first->attended++;
+            else if(first->attended == 2) {//Attended two times, reduce priority and attended
+                first->priority--;
+                first->attended--;
             }
         }
         
-        if(cliente->tempo>0)
-        {
-            *inicio = cliente->prox;
+        if(first->time>0) {//Time is not over
+            *start = first->prox;//The next node is now the first
 
-            fila *aux = *fim;
-            if(*inicio==NULL)
-            {
-                *inicio = cliente;
-                *fim = cliente;
-                cliente->prox =NULL;
-                cliente->ant =NULL;
+            queue *aux = *end;//Auxiliar node
+            if(*start==NULL) {
+                *start = first;
+                *end = first;
+                first->prox =NULL;
+                first->ant =NULL;
             }
-            else
-            {
-                while(aux !=NULL && cliente->prioridade > aux->prioridade)
+            else {//Re-inserting the first node in the queue
+                while(aux !=NULL && first->priority > aux->priority)
                     aux = aux->ant;
                 
-                if(aux->prox == NULL)
-                {
-                    (*fim)->prox = cliente;
-                    cliente->ant = *fim;
-                    cliente->prox = NULL;
-                    *fim = cliente;
+                if(aux->prox == NULL) {
+                    (*end)->prox = first;
+                    first->ant = *end;
+                    first->prox = NULL;
+                    *end = first;
                 }
-                else if(aux->ant == NULL)
-                {
-                    cliente->prox = *inicio;
-                    (*inicio)->ant=cliente;
-                    cliente->ant = NULL;
-                    *inicio = cliente;
+                else if(aux->ant == NULL) {
+                    first->prox = *start;
+                    (*start)->ant=first;
+                    first->ant = NULL;
+                    *start = first;
                 }
-                else
-                {
-                    cliente->ant = aux;
-                    aux->prox->ant = cliente;
-                    cliente->prox = aux->prox;
-                    aux->prox = cliente;
+                else {
+                    first->ant = aux;
+                    aux->prox->ant = first;
+                    first->prox = aux->prox;
+                    aux->prox = first;
                 }
             }
         }
-        else
-        {
-            *inicio = cliente->prox;
-            free(cliente);
+        else {//Time is over
+            *start = first->prox;
+            free(first);
         }   
-        puts("A Fila Andou");
+        puts("A round has passed");
     }   
 }
 
-int main()
-{
-    fila *inicio=NULL,  *fim=NULL;//Ponteiros marcadores da fila
+int main() {
+    queue *start=NULL,  *end=NULL;//Queue pointers
     int op=0;
-    //Menu de opções
-    do
-    {
-        puts("\n---------------------GARÇOM-------------------------------");
-        puts("1)Colocar na fila");
-        puts("2)Executar até esvaziar a fila");
-        puts("3)Consultar");
-        puts("2)Executar uma rodada de atendimento");
-        puts("5)SAIR");
+    //Menu 
+    do {
+        puts("\n-----------------PRIORITY QUEUE--------------------------");
+        puts("1)Insert on queue");
+        puts("2)Execute rounds until queue is empty");
+        puts("3)Print Queue");
+        puts("2)Execute one round");
+        puts("5)EXIT");
         puts("---------------------------------------------------------------");
-        printf("ESCOLHA:");
+        printf("CHOOSE:");
         scanf("%i",&op);
-        switch (op)
-        {
+        switch (op) {
             case 1:
-                insereOrdenado(&fim,&inicio);
+                Insertion(&end,&start);
                 pause();
                 break;
             case 2:
-                while(inicio!=NULL)
-                {
-                    puts("-----------------------Fila-----------------");
-                    printFP(&inicio);
-                    rodada(&inicio,&fim);
+                while(start!=NULL) {
+                    puts("-----------------------QUEUE-----------------");
+                    PrintQueue(&start);
+                    Round(&start,&end);
                 }
                 pause();
                 break;
             case 3:
-                printFP(&inicio);
+                PrintQueue(&start);
                 pause();
                 break;
             case 4:
-                rodada(&inicio,&fim);
-                printFP(&inicio);
+                Round(&start,&end);
+                PrintQueue(&start);
                 break;
             default:
                 break;
         }
         clear();
     } while (op<=4);
-    puts("O Bar fechou!");
+    puts("Program end....");
 }
