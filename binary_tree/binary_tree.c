@@ -1,166 +1,181 @@
-#include "stdlib.h"
-#include "stdio.h"
-#include "string.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
-typedef struct node
-{
-    int num;
-    struct node *esq, *dir;
-}arv;
+//Basic ATD of a binary tree
+typedef struct node {
+    int key;
+    struct node *left, *right;
+}TREE;
 
-void insereArv(arv **aux, int num)
-{
-	if(*aux == NULL)
-	{
-		*aux = malloc(sizeof(arv));
-		(*aux)->num = num;
-		(*aux)->esq = NULL;
-		(*aux)->dir = NULL;
+//Clean terminal
+void clear() {
+    #ifdef WIN32
+        system("cls");
+    #endif
+    #ifdef linux
+        system("clear");
+    #endif
+}
+
+//Pause script 
+void pause() {
+    puts("PRESS ENTER.......");
+    getchar();
+    getchar();
+}
+
+//recursive insertion function for a binary tree
+void insertNode(TREE **aux, int key) {
+	if(*aux == NULL) {//the aux node is empty
+		*aux = malloc(sizeof(TREE));
+		(*aux)->key = key;
+		(*aux)->left = NULL;
+		(*aux)->right = NULL;
 	}
-	else
-	{
-		if(num > (*aux)->num)
-			insereArv(&(*aux)->dir , num);
-		else if(num < (*aux)->num)
-			insereArv(&(*aux)->esq , num);
+	else {
+		if(key > (*aux)->key)
+			insertNode(&(*aux)->right , key);
+		else if(key < (*aux)->key)
+			insertNode(&(*aux)->left , key);
 	}	
 }
 
-void Ordem(arv *raiz)
-{
-	if(raiz != NULL)
-	{
-		Ordem(raiz->esq);
-		printf("%i ", raiz->num);
-		Ordem(raiz->dir);
+//Prints the elements of the binary tree in order
+void order(TREE *node) {
+	if(node != NULL) {
+		order(node->left);
+		printf("%i ", node->key);
+		order(node->right);
 	}
 }
 
-void PreOrdem(arv *raiz)
-{
-	if(raiz != NULL)
-	{
-		printf("%i ", raiz->num);
-		PreOrdem(raiz->esq);
-		PreOrdem(raiz->dir);
+//Prints the elements of the binary tree in pre-order
+void preOrder(TREE *node) {
+	if(node != NULL) {
+		printf("%i ", node->key);
+		preOrder(node->left);
+		preOrder(node->right);
 	}
 }
 
-void PosOrdem(arv *raiz)
-{
-	if(raiz != NULL)
-	{
-		PosOrdem(raiz->esq);
-		PosOrdem(raiz->dir);
-		printf("%i ", raiz->num);
+//Prints the elements of the binary tree in pos-order
+void posOrder(TREE *node) {
+	if(node != NULL) {
+		posOrder(node->left);
+		posOrder(node->right);
+		printf("%i ", node->key);
 	}
 }
 
-arv *buscaNo (arv *raiz, int num, arv **pai)
-{
-	arv *atual = raiz;
-	*pai = NULL;
-	while(atual)
-	{
-		if(atual->num == num)
-			return atual;
-		*pai = atual;
-		if(num < atual->num)
-			atual = atual->esq;
+//search a key in the binary tree
+TREE *searchNode (TREE *aux, int key, TREE **father_node) {
+	TREE *actual_node = aux;
+	*father_node = NULL;
+	while(actual_node) {
+		if(actual_node->key == key)
+			return actual_node;
+		*father_node = actual_node;
+		if(key < actual_node->key)
+			actual_node = actual_node->left;
 		else
-			atual = atual->dir;
+			actual_node = actual_node->right;
 	}
-	return(NULL);
+	return(NULL);//key not founded
 }
 
-arv *removeNo(arv *raiz, int num){
-    arv *pai, *no, *p, *q;
-    //p apontará para o pai do nó que irá no lugar do nó removido que no caso será apontado pelo ponteiro q
-    no = buscaNo(raiz, num, &pai);
+//Excludes a node and rebalances the tree
+TREE *removeNode(TREE *aux, int key){
+    TREE *father_node, *node, *p, *q;
+    //p points to father_node of the node who gonna replace the node that will be removed(q)
+    node = searchNode(aux, key, &father_node);
     
-    //se não existir o nó da árvore, ele retorna  o ponteiro da árvore sem alteração
-    if(no == NULL) 
-		return raiz;
-    
-    //caso o nó a ser removido tiver algum filho, q receberá o filho existente
-    if(!no->esq || !no->dir)
-        if(!no->esq) 
-            q = no->dir;
+    //there is no node with the key
+    if(node == NULL) 
+		return aux;
+
+    //In case of the node having sons, is not a leaf
+    if(!node->left || !node->right)
+        if(!node->left) 
+            q = node->right;
         else 
-            q = no->esq;
-    else{ //caso ele tiver dois filhos
-        //de padrão, o primeiro pai possivel de um possivel q será o do nó a ser removido
-        p = no;
-        //a regra de remoção é pegar o elemento mais a direita da sub-árvore a esquerda
-        
-        q = no->esq;//sub arvore esquerda
-        while(q->dir){ //elemento a direita
+            q = node->left;
+    else { //Node has both sons
+        p = node;
+
+        q = node->left;
+        while(q->right) { 
             p = q;
-            q = q->dir;
+            q = q->right;
         }
-        //tratamento do caso de p for diferente do nó a ser removido
-        if(p != no){
-            p->dir = q->esq;
-            q->esq = no->esq;
+        if(p != node) {
+            p->right = q->left;
+            q->left = node->left;
         }
-        q->dir = no->dir;
+        q->right = node->right;
     }
-    //caso a remoção foi na raiz da árvore
-    if(!pai)
-	{
-        free(no);
+
+    if(!father_node) {
+        free(node);
         return(q);
     }
     
-    //teste para ver qual lado que terá que mexer de pai para apontar para o novo elemento
-    if(pai->num < num) 
-        pai->dir = q;
+    if(father_node->key < key) 
+        father_node->right = q;
     else
-        pai->esq = q;
+        father_node->left = q;
 
-    free(no);
-    return raiz; 
+    free(node);
+    return aux; 
 }
 
-
-int main()
-{
-    int i,num,op;
-    arv *raiz=NULL;
-	do
-	{
+int main() {
+    int i,key,op;
+    TREE *root=NULL;
+	do {
 		puts("-----MENU-----");
-		puts("1)Inserir na árvore");
-		puts("2)Ordem");
-		puts("3)PreOrdem");
-		puts("4)PosOrdem");
-		puts("5)Remover nó");
+		puts("1)Insert on Tree");
+		puts("2)Elements in order");
+		puts("3)Elements in pre-order");
+		puts("4)Elements in pos-order");
+		puts("5)Remove node");
 		scanf("%i",&op);
-		switch (op)
-		{
-		case 1:
-			scanf("%i",&num);
-			insereArv(&raiz, num);
-		case 2:
-			Ordem(raiz);
-			printf("\n");
-			break;
-		case 3:
-			PreOrdem(raiz);
-			printf("\n");
-			break;
-		case 4:
-			PosOrdem(raiz);
-			printf("\n");
-			break;
-		case 5:
-			puts("Insira o número do nó que deseja apagar:");
-			int n;
-			scanf("%i",&n);
-			raiz = removeNo(raiz,num);
-			break;
-		default:
-			break;
+		switch (op) {
+			case 1:
+				printf("Insert a key:");
+				scanf("%i",&key);
+				insertNode(&root, key);
+				pause();
+				clear();
+				break;
+			case 2:
+				order(root);
+				printf("\n");
+				pause();
+				clear();
+				break;
+			case 3:
+				preOrder(root);
+				printf("\n");
+				pause();
+				clear();
+				break;
+			case 4:
+				posOrder(root);
+				printf("\n");
+				pause();
+				clear();
+				break;
+			case 5:
+				puts("Insert the key:");
+				int n;
+				scanf("%i",&n);
+				root = removeNode(root,key);
+				pause();
+				clear();
+				break;
+			default:
+				break;
 		}
 	} while (op<=5);
 	
